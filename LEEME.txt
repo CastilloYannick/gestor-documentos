@@ -1,0 +1,69 @@
+ADMINISTRADOR DE PROCESOS · GESTOR DE DOCUMENTOS (UMG)
+======================================================
+
+Cómo abrirlo
+  Abre index.html con doble clic (mejor en Chrome o Edge). No necesita internet.
+  La primera vez pide tu nombre y tu rol; tu nombre queda guardado en el historial
+  de cada cambio que hagas. "Cerrar sesión" está en el menú de tu nombre (arriba a la derecha).
+
+Secciones (atajos 1 a 6)
+  1 Panel         Resumen, ciclo del documento seleccionado, tabla con búsqueda y filtros,
+                  exportar a CSV (se abre en Excel) y actividad reciente.
+  2 Tablero       Una columna por estado. Arrastra un documento a otra columna: solo se
+                  iluminan las columnas a las que δ permite llegar; si lo sueltas en otra,
+                  la tarjeta regresa y el aviso explica qué transiciones sí existen.
+                  También puedes usar los botones de cada tarjeta.
+  3 Registrar     Registrar un documento y adjuntar un archivo de cualquier tipo.
+  4 Detalle       Datos del documento, sello con su estado, acciones (símbolos de Σ),
+                  historial con autor y fecha, "Deshacer el último paso" y eliminar.
+  5 Autómata      Tabla δ, grafo de Graphviz, lienzo de arrastrar y soltar, probador de
+                  cadenas con una ficha que recorre el grafo, "Reproducir el recorrido" del
+                  documento y el editor de flujos (modo documentos y modo diseñador).
+  6 Estadísticas  Actividad por día, documentos por estado, tiempo promedio en cada estado,
+                  transiciones más usadas y bitácora. Cada gráfica tiene "Ver como tabla".
+
+Atajos de teclado (también en el menú de tu nombre → Atajos de teclado)
+  Ctrl+K   Buscar documentos, secciones y acciones
+  1 … 6    Ir a cada sección
+  N        Registrar un documento nuevo
+  /        Buscar en la tabla de documentos
+  T        Modo claro / modo oscuro
+  Supr     Borrar lo seleccionado en el lienzo del autómata
+  ?        Ver los atajos
+
+Deshacer
+  Al aplicar una transición o eliminar un documento aparece un aviso con "Deshacer".
+
+Archivos
+  js/automata.js        Autómatas finitos deterministas: un AFD por flujo de trabajo (datos JSON).
+  js/administrador.js   Administrador de procesos: registra documentos y los mueve solo con δ.
+  js/almacen.js         Directorio: guarda archivos y los organiza en carpetas por flujo y estado.
+  js/grafo.js           Describe cada flujo en lenguaje DOT y lo dibuja con Graphviz.
+  js/lienzo.js          Lienzo de arrastrar y soltar para crear estados y transiciones.
+  js/tablero.js         Tablero (kanban) controlado por la función de transición δ.
+  js/estadisticas.js    Indicadores y gráficas calculadas desde los documentos y su historial.
+  js/efectos.js         Avisos, contadores, vuelo de tarjetas, ficha del grafo y cambio de tema.
+  js/app.js             Interfaz: secciones, sesión, paleta de comandos y atajos.
+  js/vendor/            Viz.js 3.11.0 (Graphviz para el navegador, licencia MIT).
+  css/estilos.css       Estilos, modo claro y oscuro, animaciones.
+  css/fuentes/          Bricolage Grotesque (títulos), IBM Plex Sans y Plex Mono (incluidas,
+                        funcionan sin internet; licencia OFL).
+  img/logo-umg.png      Logo de la universidad.
+
+Vista del autómata
+  - Tabla δ (clic en una celda para crear o cambiar esa transición).
+  - Grafo de Graphviz con documentos/archivos por estado y veces que se usó cada transición.
+  - "Lienzo: arrastrar y soltar": arrastra "Estado" o "Estado final" desde la paleta;
+    arrastra un estado para moverlo; arrastra desde su + hasta otro estado para crear
+    una transición (sobre el mismo estado = bucle); doble clic crea un estado;
+    Supr borra lo seleccionado; "Ordenar con Graphviz" acomoda todo automáticamente.
+  - Menú derecho: crear, duplicar y eliminar flujos; agregar estados y transiciones;
+    estado inicial y finales; colores; exportar DOT, SVG y JSON; importar JSON.
+  - "Modo diseñador": diseña sin afectar documentos y luego "Publicar para documentos".
+
+Carpeta local
+  En el Directorio, "Vincular carpeta" crea Gestor_Documentos_UMG con una carpeta por estado
+  y el archivo flujos.json (la base de datos que usa el reporte de grafos).
+
+Datos de ejemplo
+  Menú de tu nombre → "Restaurar datos de ejemplo" vuelve a los flujos y documentos iniciales.

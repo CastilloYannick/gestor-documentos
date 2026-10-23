@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Administrador de procesos · UMG</title>
+  <meta name="theme-color" content="#10304f">
+  <script>
+    // Aplica el tema guardado antes de pintar, para que no parpadee
+    try { var t = localStorage.getItem('flujo.tema'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body data-vista="panel">
+  <div class="app" id="app">
+    <!-- ============ Barra superior: marca, secciones, acciones ============ -->
+    <header class="barra-app">
+      <div class="barra-in">
+        <div class="marca">
+          <img class="logo-umg" src="img/logo-umg.png" alt="Universidad Mariano Gálvez de Guatemala"
+               onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'logo-umg logo-falta',textContent:'UMG'}))">
+          <div class="marca-txt">
+            <strong>Administrador de procesos</strong>
+            <small>Universidad Mariano Gálvez de Guatemala</small>
+          </div>
+        </div>
+
+        <!-- Pestañas: la capa "activas" es una copia recortada con clip-path que se desliza -->
+        <nav class="tabs" id="tabs" aria-label="Secciones">
+          <div class="tabs-pista">
+            <div class="tabs-lista" id="nav-top"></div>
+            <div class="tabs-lista tabs-activas" id="nav-activas" aria-hidden="true"></div>
+          </div>
+        </nav>
+
+        <div class="barra-acc">
+          <button class="icono-btn buscar-btn" id="btn-comandos" type="button" aria-label="Buscar documentos o acciones (Ctrl+K)">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <span class="buscar-txt">Buscar</span><kbd>Ctrl K</kbd>
+          </button>
+          <button class="icono-btn" id="btn-tema" type="button" aria-label="Cambiar a modo oscuro">
+            <svg class="ico-luna" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
+            <svg class="ico-sol" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          </button>
+          <div class="usuario">
+            <button class="usuario-btn" id="btn-usuario" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menu-usuario">
+              <span class="avatar" id="avatar">–</span>
+              <span class="usuario-txt"><b id="usuario-nombre">Invitado</b><small id="usuario-rol"></small></span>
+            </button>
+            <div class="menu-usuario" id="menu-usuario" hidden>
+              <p class="mu-nombre" id="mu-nombre"></p>
+              <p class="mu-rol" id="mu-rol"></p>
+              <button type="button" class="mu-item" data-cmd="atajos">Atajos de teclado <kbd>?</kbd></button>
+              <button type="button" class="mu-item" data-cmd="reiniciar">Restaurar datos de ejemplo</button>
+              <button type="button" class="mu-item peligro" id="btn-salir">Cerrar sesión</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ Contenido ============ -->
+    <div class="contenido">
+      <div class="layout">
+        <main class="card" id="principal"></main>
+        <aside class="card lateral" id="lateral">
+          <div id="aside-panel"></div>
+          <div id="aside-editor"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avisos apilados (con Deshacer) -->
+  <section class="toasts" id="toasts" aria-live="polite" aria-label="Avisos"></section>
+
+  <!-- Ventana del directorio de documentos -->
+  <div class="modal" id="modal-dir" hidden>
+    <div class="modal-fondo" data-cerrar-dir></div>
+    <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="dir-titulo">
+      <div id="dir-contenido"></div>
+    </div>
+  </div>
+
+  <!-- Paleta de comandos (Ctrl+K). Sin animación de apertura: se usa muchas veces al día -->
+  <div class="paleta" id="paleta" hidden>
+    <div class="paleta-fondo" data-cerrar-paleta></div>
+    <div class="paleta-caja" role="dialog" aria-modal="true" aria-label="Buscar documentos o acciones">
+      <div class="paleta-buscar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="paleta-input" type="text" placeholder="Busca un documento, una sección o una acción…" autocomplete="off" aria-controls="paleta-lista" aria-autocomplete="list">
+        <kbd>Esc</kbd>
+      </div>
+      <ul class="paleta-lista" id="paleta-lista" role="listbox"></ul>
+    </div>
+  </div>
+
+  <!-- Atajos de teclado -->
+  <div class="modal" id="modal-atajos" hidden>
+    <div class="modal-fondo" data-cerrar-atajos></div>
+    <div class="modal-caja chica" role="dialog" aria-modal="true" aria-labelledby="atajos-titulo">
+      <div class="view-head"><h2 id="atajos-titulo">Atajos de teclado</h2><button class="btn sm" data-cerrar-atajos>Cerrar</button></div>
+      <dl class="atajos">
+        <dt><kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Buscar documentos, secciones y acciones</dd>
+        <dt><kbd>1</kbd> … <kbd>6</kbd></dt><dd>Ir a Panel, Tablero, Registrar, Detalle, Autómata o Estadísticas</dd>
+        <dt><kbd>N</kbd></dt><dd>Registrar un documento nuevo</dd>
+        <dt><kbd>/</kbd></dt><dd>Buscar en la tabla de documentos</dd>
+        <dt><kbd>T</kbd></dt><dd>Cambiar entre modo claro y oscuro</dd>
+        <dt><kbd>Supr</kbd></dt><dd>Borrar lo seleccionado en el lienzo del autómata</dd>
+        <dt><kbd>?</kbd></dt><dd>Mostrar esta ayuda</dd>
+      </dl>
+    </div>
+  </div>
+
+  <!-- Inicio de sesión -->
+  <div class="login" id="login" hidden>
+    <div class="login-arte" aria-hidden="true">
+      <img class="login-sello" src="img/logo-umg.png" alt="">
+      <svg class="login-maquina" viewBox="0 0 420 150">
+        <defs><marker id="lg-p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+        <path id="lg-ruta" d="M58 75 C110 30 150 30 202 75 C254 120 300 120 352 75" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 6"/>
+        <path d="M18 75h18" stroke="currentColor" stroke-width="2" marker-end="url(#lg-p)"/>
+        <g class="lg-nodo" style="--c:#f5b301"><circle cx="58" cy="75" r="22"/><text x="58" y="80">q0</text></g>
+        <g class="lg-nodo" style="--c:#16a34a"><circle cx="202" cy="75" r="22"/><text x="202" y="80">q1</text></g>
+        <g class="lg-nodo final" style="--c:#e8eef6"><circle cx="352" cy="75" r="22"/><circle cx="352" cy="75" r="17" class="anillo"/><text x="352" y="80">q2</text></g>
+        <g class="lg-ficha"><rect x="-8" y="-10" width="16" height="20" rx="3"/><path d="M-4 -3h8M-4 1h8M-4 5h5"/>
+          <animateMotion id="lg-anim" dur="4.2s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;.15;.8;1" calcMode="spline" keySplines="0 0 1 1;.77 0 .18 1;0 0 1 1"><mpath href="#lg-ruta"/></animateMotion>
+        </g>
+      </svg>
+      <p class="login-frase">Cada documento avanza solo cuando el autómata lo permite.</p>
+    </div>
+    <form class="login-form" id="form-login" novalidate>
+      <h1>Bienvenido</h1>
+      <p class="lead">Ingresa para administrar los documentos de la facultad. Tu nombre quedará en el historial de cada cambio que hagas.</p>
+      <label for="login-nombre">Tu nombre</label>
+      <input id="login-nombre" name="nombre" autocomplete="name" placeholder="Ej. Yanic Castillo" maxlength="60" required>
+      <label for="login-rol">Rol</label>
+      <div class="roles" id="login-rol" role="radiogroup" aria-label="Rol">
+        <label class="rol"><input type="radio" name="rol" value="Administrador" checked><span><b>Administrador</b><small>Todo el sistema y los flujos</small></span></label>
+        <label class="rol"><input type="radio" name="rol" value="Revisor"><span><b>Revisor</b><small>Revisa y resuelve documentos</small></span></label>
+        <label class="rol"><input type="radio" name="rol" value="Registrador"><span><b>Registrador</b><small>Ingresa documentos nuevos</small></span></label>
+      </div>
+      <p class="login-error" id="login-error" role="alert"></p>
+      <button class="btn primary grande" type="submit">Entrar</button>
+    </form>
+  </div>
+
+  <!-- Pantalla de sesión cerrada -->
+  <div class="salida" id="salida" hidden>
+    <div class="salida-caja">
+      <div class="salida-logo" id="salida-logo"></div>
+      <h2>Sesión cerrada</h2>
+      <p>Tu sesión en el Administrador de procesos terminó correctamente. Ya puedes cerrar esta pestaña.</p>
+      <button class="btn primary" id="btn-reingresar" type="button">Volver a ingresar</button>
+    </div>
+  </div>
+
+  <!-- El orden importa: primero el autómata, luego el administrador que lo usa, al final la interfaz -->
+  <script src="js/vendor/viz-standalone.js"></script> <!-- Graphviz para el navegador (Viz.js, licencia MIT) -->
+  <script src="js/automata.js"></script>
+  <script src="js/administrador.js"></script>
+  <script src="js/almacen.js"></script>
+  <script src="js/grafo.js"></script>
+  <script src="js/lienzo.js"></script>
+  <script src="js/efectos.js"></script>
+  <script src="js/tablero.js"></script>
+  <script src="js/estadisticas.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
